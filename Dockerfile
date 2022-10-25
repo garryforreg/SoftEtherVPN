@@ -15,6 +15,7 @@ RUN wget https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/archive/v${BUILD_VE
 FROM centos:8 as build
 
 COPY --from=prep /usr/local/src /usr/local/src
+COPY server.c   /usr/local/src/Cedar/
 
 RUN yum -y update \
     && yum -y groupinstall "Development Tools" \
