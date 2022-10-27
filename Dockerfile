@@ -1,10 +1,10 @@
-FROM alpine:3.14 as prep
+FROM alpine:3.16 as prep
 
 LABEL maintainer="Tomohisa Kusano <siomiz@gmail.com>" \
       contributors="See CONTRIBUTORS file <https://github.com/siomiz/SoftEtherVPN/blob/master/CONTRIBUTORS>"
 
-ENV BUILD_VERSION=4.38-9760-rtm \
-    SHA256_SUM=7701dfb76b888d4adde19d9a39d0919681f6c091f3eb5295ec8caf0439eb3a1a
+ENV BUILD_VERSION=4.39-9772-beta \
+    SHA256_SUM=5c538e35e1639ce9a55a31be0b66af224462b84caf0ebf831f1e56efe6f9924a
 
 RUN wget https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/archive/v${BUILD_VERSION}.tar.gz \
     && echo "${SHA256_SUM}  v${BUILD_VERSION}.tar.gz" | sha256sum -c \
@@ -12,14 +12,14 @@ RUN wget https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/archive/v${BUILD_VE
     && tar -x -C /usr/local/src/ -f v${BUILD_VERSION}.tar.gz \
     && rm v${BUILD_VERSION}.tar.gz
 
-FROM centos:8 as build
+FROM alpine:3.16 as build
 
 COPY --from=prep /usr/local/src /usr/local/src
 COPY server.c   /usr/local/src/Cedar/
 
-RUN yum -y update \
-    && yum -y groupinstall "Development Tools" \
-    && yum -y install ncurses-devel openssl-devel readline-devel \
+ENV LANG=en_US.UTF-8
+
+RUN apk add -U build-base ncurses-dev openssl-dev readline-dev zip zlib-dev \
     && cd /usr/local/src/SoftEtherVPN_Stable-* \
     && ./configure \
     && make \
@@ -27,15 +27,15 @@ RUN yum -y update \
     && touch /usr/vpnserver/vpn_server.config \
     && zip -r9 /artifacts.zip /usr/vpn* /usr/bin/vpn*
 
-FROM centos:8
+FROM alpine:3.16
 
 COPY --from=build /artifacts.zip /
 
 COPY copyables /
 
-RUN yum -y update \
-    && yum -y install unzip iptables \
-    && rm -rf /var/log/* /var/cache/yum/* /var/lib/yum/* \
+ENV LANG=en_US.UTF-8
+
+RUN apk add -U --no-cache bash iptables openssl-dev \
     && chmod +x /entrypoint.sh /gencert.sh \
     && unzip -o /artifacts.zip -d / \
     && rm /artifacts.zip \
