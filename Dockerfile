@@ -15,7 +15,7 @@ RUN wget https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/archive/v${BUILD_VE
 FROM alpine:3.16 as build
 
 COPY --from=prep /usr/local/src /usr/local/src
-COPY server.c   /usr/local/src/Cedar/
+COPY Server.c   /usr/local/src/SoftEtherVPN_Stable-${BUILD_VERSION}/src/Cedar/
 
 ENV LANG=en_US.UTF-8
 
